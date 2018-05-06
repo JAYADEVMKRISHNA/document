@@ -1,0 +1,138 @@
+import numpy as np
+import serial
+import cv2
+prev='y'
+new='0'
+
+
+   
+
+    
+arduino = serial.Serial('COM6', 9600)        
+
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+
+cap = cv2.VideoCapture(0)
+while True:
+    ret, img = cap.read()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+   # print(faces)
+    for (x,y,w,h) in faces:
+        fx=faces[0][0]
+        fy=faces[0][1]
+        fw=faces[0][2]
+        fh=faces[0][3]
+        
+        
+        cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_color = img[y:y + h, x:x + w]
+        eyes = eye_cascade.detectMultiScale(roi_gray, 1.3, 5)
+        for (ex, ey, ew, eh) in eyes:
+            cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (255, 255, 0), 2)
+        cv2.imshow('img',img) 
+            
+           
+        
+    
+    
+       
+           
+           
+            
+        
+    if(cv2.waitKey(1)& 0xFF==ord('q')):
+       break
+#print(fx,fy,fw,fh)
+refx=fx
+refy=fy
+while True:
+    ret, img = cap.read()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+   # print(faces)
+    
+    
+    for (x,y,w,h) in faces:
+        fx=faces[0][0]
+        fy=faces[0][1]
+        fw=faces[0][2]
+        fh=faces[0][3]
+        
+        #print(fx,fy,fw,fh)
+        #datasend()
+    k=1
+    #cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+    u1 = x + w
+    u2 = y + h
+        
+    roi_gray = gray[y:y + h, x:x + w]
+    roi_color = img[y:y + h, x:x + w]
+    eyes = eye_cascade.detectMultiScale(roi_gray, 1.3, 5)
+    for (ex, ey, ew, eh) in eyes:
+        k = 0
+        cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (255, 255, 0), 2)
+    if(fx<(refx-15)):
+        
+        new='R'
+        if(new!=prev):
+            
+            print("RIGHT")
+            arduino.write('R') 
+    elif (fx>(refx+15)):
+        new='L'
+        #print(new)
+        #print("Right")
+        if(new!=prev):
+            print("LEFT")
+            arduino.write('L') 
+    elif (fy<(refy-15)):
+        new='U'
+        #print(new)
+        if(new!=prev):
+            print("UP")
+            arduino.write("U")
+        
+        #arduino.write('U')
+    elif (fy>(refy+15)):
+         new='D'
+         #print(new)
+         if(new!=prev):
+            print("Down")
+            arduino.write('D')
+    else:
+     
+        if(k==1):
+            
+             new='B'
+             #print(new)
+             if(new!=prev):
+                print("blink")
+                arduino.write('B')
+        else:
+            new='S'
+            #print(new)
+            if(new!=prev):
+                print("normal")
+                arduino.write('S')
+                
+            
+            
+    
+    prev=new
+    #print(prev)
+    
+    cv2.imshow('img',img)    
+    if(cv2.waitKey(1)& 0xFF==ord('q')):
+       break
+
+
+
+cap.release()
+cv2.destroyAllWindows()
+
+
+
